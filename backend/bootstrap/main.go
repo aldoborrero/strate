@@ -13,7 +13,6 @@ import (
 	"runtime"
 	"runtime/pprof"
 
-	"github.com/diggerhq/digger/backend/config"
 	"github.com/diggerhq/digger/backend/segment"
 	pprof_gin "github.com/gin-contrib/pprof"
 
@@ -97,7 +96,6 @@ func cleanupOldProfiles(dir string, keep int) {
 func Bootstrap(templates embed.FS, diggerController controllers.DiggerController) *gin.Engine {
 	defer segment.CloseClient()
 	initLogging()
-	cfg := config.DiggerConfig
 
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn:           os.Getenv("SENTRY_DSN"),
@@ -130,8 +128,8 @@ func Bootstrap(templates embed.FS, diggerController controllers.DiggerController
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"build_date":  cfg.GetString("build_date"),
-			"deployed_at": cfg.GetString("deployed_at"),
+			"build_date":  "",
+			"deployed_at": "",
 			"version":     Version,
 			"commit_sha":  Version,
 		})
