@@ -1,0 +1,9 @@
+server:
+  port: 3000
+  base_url: http://localhost:3000
+ci:
+  provider: github
+  github:
+    app_id: 12345
+auth:
+  jwt_secret: test-secret

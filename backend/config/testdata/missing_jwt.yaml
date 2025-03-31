@@ -1,0 +1,7 @@
+server:
+  port: 3000
+  base_url: http://localhost:3000
+auth:
+  jwt_secret: ""
+  jwt_public_key: ""
+  auth_host: ""

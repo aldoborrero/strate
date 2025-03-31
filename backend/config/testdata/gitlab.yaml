@@ -1,0 +1,14 @@
+server:
+  port: 5000
+  base_url: https://digger-gitlab.example.com
+database:
+  type: sqlite
+  sqlite:
+    path: /tmp/digger-gitlab.db
+ci:
+  provider: gitlab
+  gitlab:
+    access_token: gitlab-token
+    base_url: https://gitlab.example.com
+auth:
+  jwt_secret: test-secret
