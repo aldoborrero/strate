@@ -22,7 +22,6 @@ func GetPort() int {
 // This is a compatibility layer to support code that still reads from os.Getenv
 func SetEnvFromConfig(cfg *Config) {
 	// Server config
-	os.Setenv("DIGGER_PPROF_DEBUG_ENABLED", strconv.FormatBool(cfg.Server.PprofDebugEnabled))
 	os.Setenv("DIGGER_ENABLE_INTERNAL_ENDPOINTS", strconv.FormatBool(cfg.Server.EnableInternalEndpoints))
 	os.Setenv("DIGGER_ENABLE_API_ENDPOINTS", strconv.FormatBool(cfg.Server.EnableApiEndpoints))
 

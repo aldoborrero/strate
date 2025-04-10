@@ -1,10 +1,10 @@
 server:
   port: 4000
-  base_url: https://digger.example.com
+  base_url: https://strate.example.com
 database:
   type: sqlite
   sqlite:
-    path: /tmp/digger.db
+    path: /tmp/strate.db
 ci:
   provider: github
   github:
