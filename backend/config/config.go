@@ -19,9 +19,6 @@ var (
 	// BackendConfig stores the global application configuration (we will remove this once the code is fully migrated to this config)
 	BackendConfig *Config
 
-	// DiggerConfig offers backwards compatiblity until codebase is migrated (we will remove this once the code is fully migrated to this config)
-	DiggerConfig *Config
-
 	// validator instance
 	validate = validator.New()
 )
@@ -35,7 +32,6 @@ type Config struct {
 	Features  FeatureConfig   `validate:"required"`
 	Analytics AnalyticsConfig `validate:"required"`
 	Security  SecurityConfig  `validate:"required"`
-	AI        AIConfig        `validate:"required"`
 	Log       LogConfig       `validate:"required"`
 }
 
@@ -44,12 +40,9 @@ type ServerConfig struct {
 	BackendHostname         string `validate:"omitempty"`
 	Port                    int    `validate:"required,gt=0,lt=65536"`
 	BaseURL                 string `validate:"required,url"`
-	BuildDate               string `validate:"omitempty"`
-	DeployedAt              string `validate:"omitempty"`
 	MaxConcurrencyPerBatch  int    `validate:"omitempty,gte=0"`
 	EnableInternalEndpoints bool
 	EnableApiEndpoints      bool
-	PprofDebugEnabled       bool
 	WebhookTimeoutSeconds   int `validate:"required,gt=0"`
 	RepoAllowList           string
 	Pprof                   PprofConfig `validate:"required"`
@@ -154,7 +147,7 @@ type FeatureConfig struct {
 
 // AnalyticsConfig contains analytics-related configuration
 type AnalyticsConfig struct {
-	Sentry  SentryConfig  `validate:"required"`
+	Sentry SentryConfig `validate:"required"`
 }
 
 // SentryConfig contains Sentry-specific configuration
@@ -173,45 +166,19 @@ type SecurityConfig struct {
 	EncryptionSecret string
 }
 
-// AIConfig contains all AI/ML-related configuration
-type AIConfig struct {
-	Enabled    bool
-	Summary    AISummaryConfig    `validate:"required"`
-	Generation AIGenerationConfig `validate:"required"`
-}
-
-// AISummaryConfig contains configuration for AI summary feature
-type AISummaryConfig struct {
-	Enabled   bool
-	Endpoint  string        `validate:"required_if=Enabled true,omitempty,url"`
-	ApiToken  string        `validate:"required_if=Enabled true"`
-	MaxLength int           `validate:"omitempty,gt=0"`
-	Timeout   time.Duration `validate:"omitempty,gt=0"`
-}
-
-// AIGenerationConfig contains configuration for AI generation feature
-type AIGenerationConfig struct {
-	Enabled     bool
-	Endpoint    string        `validate:"required_if=Enabled true,omitempty,url"`
-	ApiToken    string        `validate:"required_if=Enabled true"`
-	MaxTokens   int           `validate:"omitempty,gt=0"`
-	Temperature float64       `validate:"omitempty,gte=0,lte=1"`
-	Timeout     time.Duration `validate:"omitempty,gt=0"`
-}
-
 // LogConfig represents logging configuration
 type LogConfig struct {
 	Format string `validate:"required,oneof=json text"`
 	Level  slog.Level
 }
 
-// LoadConfig prepares and loads the Digger configuration
+// LoadConfig prepares and loads the Strate configuration
 // This sets default values, reads configuration files, and handles environment variables
 func LoadConfig(configPath string) (*Config, error) {
 	v := viper.New()
 
 	// Setup viper to handle environment variables
-	v.SetEnvPrefix("DIGGER")
+	v.SetEnvPrefix("STRATE")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	v.AutomaticEnv()
 
@@ -220,8 +187,8 @@ func LoadConfig(configPath string) (*Config, error) {
 
 	// Look for config files in the standard locations
 	v.SetConfigName("config")
-	v.AddConfigPath("/etc/digger-backend/")
-	v.AddConfigPath("$HOME/.digger-backend")
+	v.AddConfigPath("/etc/strate/")
+	v.AddConfigPath("$HOME/.strate")
 	v.AddConfigPath(".")
 
 	// Read config file if specified
@@ -255,7 +222,6 @@ func LoadConfig(configPath string) (*Config, error) {
 	// Set the global configuration
 	// TODO: global variables are evil! Remove this once the codebase has fully migrated to use the newer config system
 	BackendConfig = cfg
-	DiggerConfig = cfg
 
 	return cfg, nil
 }
@@ -294,14 +260,14 @@ func setDefaultValues(v *viper.Viper) {
 	v.SetDefault("database.gorm.prepare_stmt", false)
 
 	// SQLite defaults
-	v.SetDefault("database.sqlite.path", "digger.db")
+	v.SetDefault("database.sqlite.path", "strate.db")
 	v.SetDefault("database.sqlite.write_ahead_log", true)
 	v.SetDefault("database.sqlite.wal_auto_check_point", 1000)
 
 	// PostgreSQL defaults
 	v.SetDefault("database.postgres.host", "localhost")
 	v.SetDefault("database.postgres.port", 5432)
-	v.SetDefault("database.postgres.name", "digger")
+	v.SetDefault("database.postgres.name", "strate")
 	v.SetDefault("database.postgres.user", "postgres")
 	v.SetDefault("database.postgres.pass", "")
 	v.SetDefault("database.postgres.ssl", "disable")
@@ -356,24 +322,6 @@ func setDefaultValues(v *viper.Viper) {
 	// Security defaults
 	v.SetDefault("security.encryption_secret", "")
 
-	// AI global defaults
-	v.SetDefault("ai.enabled", false)
-
-	// AI Summary defaults
-	v.SetDefault("ai.summary.enabled", false)
-	v.SetDefault("ai.summary.endpoint", "")
-	v.SetDefault("ai.summary.api_token", "")
-	v.SetDefault("ai.summary.max_length", 500)
-	v.SetDefault("ai.summary.timeout", 30*time.Second)
-
-	// AI Generation defaults
-	v.SetDefault("ai.generation.enabled", false)
-	v.SetDefault("ai.generation.endpoint", "")
-	v.SetDefault("ai.generation.api_token", "")
-	v.SetDefault("ai.generation.max_tokens", 1000)
-	v.SetDefault("ai.generation.temperature", 0)
-	v.SetDefault("ai.generation.timeout", 60*time.Second)
-
 	// Logging defaults
 	v.SetDefault("log.level", "info")
 	v.SetDefault("log.format", "text")
@@ -386,12 +334,9 @@ func buildConfigFromViper(v *viper.Viper, logConfig LogConfig) *Config {
 			BackendHostname:         v.GetString("server.backend_hostname"),
 			Port:                    v.GetInt("server.port"),
 			BaseURL:                 v.GetString("server.base_url"),
-			BuildDate:               v.GetString("server.build_date"),
-			DeployedAt:              v.GetString("server.deployed_at"),
 			MaxConcurrencyPerBatch:  v.GetInt("server.max_concurrency_per_batch"),
 			EnableInternalEndpoints: v.GetBool("server.enable_internal_endpoints"),
 			EnableApiEndpoints:      v.GetBool("server.enable_api_endpoints"),
-			PprofDebugEnabled:       v.GetBool("server.pprof_debug_enabled"),
 			WebhookTimeoutSeconds:   v.GetInt("server.webhook_timeout_seconds"),
 			RepoAllowList:           v.GetString("server.repo_allow_list"),
 			Pprof: PprofConfig{
@@ -489,27 +434,6 @@ func buildConfigFromViper(v *viper.Viper, logConfig LogConfig) *Config {
 
 		Security: SecurityConfig{
 			EncryptionSecret: v.GetString("security.encryption_secret"),
-		},
-
-		AI: AIConfig{
-			Enabled: v.GetBool("ai.enabled"),
-
-			Summary: AISummaryConfig{
-				Enabled:   v.GetBool("ai.summary.enabled"),
-				Endpoint:  v.GetString("ai.summary.endpoint"),
-				ApiToken:  v.GetString("ai.summary.api_token"),
-				MaxLength: v.GetInt("ai.summary.max_length"),
-				Timeout:   v.GetDuration("ai.summary.timeout"),
-			},
-
-			Generation: AIGenerationConfig{
-				Enabled:     v.GetBool("ai.generation.enabled"),
-				Endpoint:    v.GetString("ai.generation.endpoint"),
-				ApiToken:    v.GetString("ai.generation.api_token"),
-				MaxTokens:   v.GetInt("ai.generation.max_tokens"),
-				Temperature: v.GetFloat64("ai.generation.temperature"),
-				Timeout:     v.GetDuration("ai.generation.timeout"),
-			},
 		},
 
 		Log: logConfig,
