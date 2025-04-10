@@ -29,6 +29,8 @@ let
 
       sqlfluff.enable = true;
       sqlfluff.dialect = "postgres";
+
+      hclfmt.enable = true;
     };
     settings.formatter = {
       deadnix.pipeline = "nix";
@@ -66,6 +68,9 @@ let
 
       sqlfluff.pipeline = "sql";
       sqlfluff.priority = 1;
+
+      hclfmt.pipeline = "tf";
+      hclfmt.priority = 1;
     };
 
   };
