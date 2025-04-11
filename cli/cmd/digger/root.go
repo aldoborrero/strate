@@ -3,14 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/go-substrate/strate/cli/pkg/utils"
 	"github.com/go-substrate/strate/libs/backendapi"
 	"github.com/go-substrate/strate/libs/ci"
-	"github.com/go-substrate/strate/libs/ci/bitbucket"
 	orchestrator_github "github.com/go-substrate/strate/libs/ci/github"
 	"github.com/go-substrate/strate/libs/comment_utils/reporting"
 	locking2 "github.com/go-substrate/strate/libs/locking"
@@ -43,27 +41,6 @@ func (r *RunConfig) GetServices() (*ci.PullRequestService, *ci.OrgService, *repo
 			PrNumber:          r.PRNumber,
 			IsSupportMarkdown: true,
 		}
-	case "bitbucket":
-		repoOwner, repositoryName := utils.ParseRepoNamespace(r.RepoNamespace)
-		prService = bitbucket.BitbucketAPI{
-			AuthToken:     r.BitbucketToken,
-			HttpClient:    http.Client{},
-			RepoWorkspace: repoOwner,
-			RepoName:      repositoryName,
-		}
-		orgService = bitbucket.BitbucketAPI{
-			AuthToken:     "",
-			HttpClient:    http.Client{},
-			RepoWorkspace: repoOwner,
-			RepoName:      repositoryName,
-		}
-		reporter = &reporting.CiReporter{
-			CiService:         prService,
-			ReportStrategy:    ReportStrategy,
-			PrNumber:          r.PRNumber,
-			IsSupportMarkdown: false,
-		}
-
 	case "stdout":
 		print("Using Stdout.")
 		reporter = &reporting.StdOutReporter{}
@@ -71,7 +48,6 @@ func (r *RunConfig) GetServices() (*ci.PullRequestService, *ci.OrgService, *repo
 		orgService = orchestrator_github.MockCiService{}
 	default:
 		return nil, nil, nil, fmt.Errorf("unknown reporter: %v", r.Reporter)
-
 	}
 
 	return &prService, &orgService, &reporter, nil

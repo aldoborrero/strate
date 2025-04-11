@@ -18,9 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	backend2 "github.com/go-substrate/strate/libs/backendapi"
 	"github.com/go-substrate/strate/libs/ci"
-	"github.com/go-substrate/strate/libs/ci/bitbucket"
 	"github.com/go-substrate/strate/libs/ci/github"
-	"github.com/go-substrate/strate/libs/ci/gitlab"
 	"github.com/go-substrate/strate/libs/comment_utils/reporting"
 	"github.com/go-substrate/strate/libs/locking"
 	"github.com/go-substrate/strate/libs/locking/aws"
@@ -134,9 +132,6 @@ func (r ReporterProvider) GetReporter(title string, reporterSpec ReporterSpec, c
 	}
 
 	isSupportMarkdown := true
-	if vcs == "bitbucket" {
-		isSupportMarkdown = false
-	}
 	switch reporterSpec.ReporterType {
 	case "noop":
 		return reporting.NoopReporter{}, nil
@@ -192,28 +187,6 @@ func (v VCSProviderBasic) GetPrService(vcsSpec VcsSpec) (ci.PullRequestService, 
 			return nil, fmt.Errorf("failed to get github service: GITHUB_TOKEN not specified")
 		}
 		return github.GithubServiceProviderBasic{}.NewService(token, vcsSpec.RepoName, vcsSpec.RepoOwner)
-	case "bitbucket":
-		token := os.Getenv("DIGGER_BITBUCKET_ACCESS_TOKEN")
-		if token == "" {
-			return nil, fmt.Errorf("failed to get bitbucket service: GITLAB_TOKEN not specified")
-		}
-		return bitbucket.BitbucketAPI{
-			AuthToken:     token,
-			HttpClient:    http.Client{},
-			RepoWorkspace: vcsSpec.RepoOwner,
-			RepoName:      vcsSpec.RepoName,
-		}, nil
-	case "gitlab":
-		token := os.Getenv("GITLAB_TOKEN")
-		if token == "" {
-			return nil, fmt.Errorf("failed to get gitlab service: GITLAB_TOKEN not specified")
-		}
-		context, err := gitlab.ParseGitLabContext()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get gitlab service, could not parse context: %v", err)
-		}
-		return gitlab.NewGitLabService(token, context, "")
-
 	default:
 		return nil, fmt.Errorf("could not get PRService, unknown type %v", vcsSpec.VcsType)
 	}
@@ -229,27 +202,6 @@ func (v VCSProviderBasic) GetOrgService(vcsSpec VcsSpec) (ci.OrgService, error) 
 			return nil, fmt.Errorf("failed to get github service: GITHUB_TOKEN not specified")
 		}
 		return github.GithubServiceProviderBasic{}.NewService(token, vcsSpec.RepoName, vcsSpec.RepoOwner)
-	case "bitbucket":
-		token := os.Getenv("DIGGER_BITBUCKET_ACCESS_TOKEN")
-		if token == "" {
-			return nil, fmt.Errorf("failed to get bitbucket service: GITLAB_TOKEN not specified")
-		}
-		return bitbucket.BitbucketAPI{
-			AuthToken:     token,
-			HttpClient:    http.Client{},
-			RepoWorkspace: vcsSpec.RepoOwner,
-			RepoName:      vcsSpec.RepoName,
-		}, nil
-	case "gitlab":
-		token := os.Getenv("GITLAB_TOKEN")
-		if token == "" {
-			return nil, fmt.Errorf("failed to get gitlab service: GITLAB_TOKEN not specified")
-		}
-		context, err := gitlab.ParseGitLabContext()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get gitlab service, could not parse context: %v", err)
-		}
-		return gitlab.NewGitLabService(token, context, "")
 	default:
 		return nil, fmt.Errorf("could not get PRService, unknown type %v", vcsSpec.VcsType)
 	}
