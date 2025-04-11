@@ -7,11 +7,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/dominikbraun/graph"
 	"github.com/gin-gonic/gin"
 	"github.com/go-substrate/strate/backend/middleware"
 	"github.com/go-substrate/strate/backend/models"
-	dg_configuration "github.com/go-substrate/strate/libs/digger_config"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -301,33 +299,4 @@ func IssueAccessTokenForOrg(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"token": token})
-}
-
-func loadDiggerConfig(configYaml *dg_configuration.DiggerConfigYaml) (*dg_configuration.DiggerConfig, graph.Graph[string, dg_configuration.Project], error) {
-	err := dg_configuration.ValidateDiggerConfigYaml(configYaml, "loaded config")
-	if err != nil {
-		return nil, nil, fmt.Errorf("error validating config: %v", err)
-	}
-
-	config, depGraph, err := dg_configuration.ConvertDiggerYamlToConfig(configYaml)
-	if err != nil {
-		return nil, nil, fmt.Errorf("error converting config: %v", err)
-	}
-
-	err = dg_configuration.ValidateDiggerConfig(config)
-	if err != nil {
-		return nil, nil, fmt.Errorf("error validating config: %v", err)
-	}
-	return config, depGraph, nil
-}
-
-func GetIndependentProjects(depGraph graph.Graph[string, string], projectsToFilter []dg_configuration.Project) ([]dg_configuration.Project, error) {
-	adjacencyMap, _ := depGraph.AdjacencyMap()
-	res := make([]dg_configuration.Project, 0)
-	for _, project := range projectsToFilter {
-		if len(adjacencyMap[project.Name]) == 0 {
-			res = append(res, project)
-		}
-	}
-	return res, nil
 }
