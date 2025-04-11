@@ -575,9 +575,6 @@ func GetPrServiceFromBatch(batch *models.DiggerBatch, gh utils.GithubClientProvi
 			batch.RepoName,
 		)
 		return service, err
-	case "gitlab":
-		service, err := utils.GetGitlabService(utils.GitlabClientProvider{}, batch.GitlabProjectId, batch.RepoName, batch.RepoFullName, batch.PrNumber, "")
-		return service, err
 	}
 
 	return nil, fmt.Errorf("could not retrieive a service for %v", batch.VCS)
