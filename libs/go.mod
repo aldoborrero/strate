@@ -17,7 +17,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.32.4
 	github.com/aws/smithy-go v1.22.0
 	github.com/bmatcuk/doublestar/v4 v4.6.1
-	github.com/caarlos0/env/v11 v11.1.0
 	github.com/dineshba/tf-summarize v0.3.14
 	github.com/dominikbraun/graph v0.23.0
 	github.com/go-git/go-git/v5 v5.12.0
@@ -29,12 +28,10 @@ require (
 	github.com/hashicorp/hcl/v2 v2.20.1
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20250203082807-efaa306e97b4
 	github.com/hashicorp/terraform-json v0.22.1
-	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
 	github.com/open-policy-agent/opa v0.66.0
 	github.com/samber/lo v1.39.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
-	github.com/xanzy/go-gitlab v0.106.0
 	github.com/zclconf/go-cty v1.14.4
 	golang.org/x/sync v0.10.0
 	golang.org/x/text v0.21.0
